@@ -1,8 +1,8 @@
-[Playground link](https://github.com/lf-lang/playground-lingua-franca/tree/fault-tolerance)
+
 
 # Fault Tolerant Real-Time Software Examples
 
-This repository introduces a deterministic execution model of fault-tolerant real-time software in Lingua Franca.
+This repository introduces a deterministic execution model of fault-tolerant real-time software in Lingua Franca. Please check the [playground link](https://github.com/lf-lang/playground-lingua-franca/tree/fault-tolerance) for instructions on lingua-franca.
 
 ## Motivation
 For fault tolerance without requiring additional hardware, time redundancy techniques such as re-execution is widely used. However, this approach introduces non-determinism due to unpredictable timing of failures, which leads to inconsistent behavior and makes analysis and repeatable testing unreliable.
