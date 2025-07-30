@@ -7,7 +7,7 @@
  * optimistic execution time. Faults are simulated with probabilistic failures, and task is restored
  * from the checkpoint when fails.
  *
- * 2. Predictive Task Dropping: Upon segment failure, the system evaluates whether retrying will
+ * 2. Proactive Task Abortion: Upon segment failure, the system evaluates whether re-executing will
  * still meet the task's deadline and only proceeds if the deadline constraint is preserved.
  *
  * The purpose of this design is to investigate how logic-based scheduling and retry policies can
@@ -112,7 +112,7 @@ reactor AdvanceTime(
   =}
 }
 
-reactor TaskRetryTemplate(
+reactor FaultTolerantTaskTemplate(
     task_num: uint16_t = 0,
     dead_line: uint16_t = 0,
     num_of_segs: uint16_t = 0,
@@ -150,13 +150,15 @@ reactor TaskRetryTemplate(
 }
 
 // This is for user inheritance. Check TaskExample.lf.
-// The extended reactor contains user-defined C code for the task inside the preamble. Users can define taskspecific inputs and outputs here.
+// The extended reactor contains user-defined C code for the task inside the preamble. Users can define task-specific inputs and outputs here.
 reactor TaskBody {
   input start_seg: int
   output f_seg: int
 }
 
-// This reactor reactor manages the predictable task dropping. It receives the segment number to retry from the Task reactor, and determines whether the remaining segments can still meet the deadline. If not, it halts execution early, otherwise, it triggers a retry through the Task reactor.
+// This reactor reactor manages the proactive task abortion.
+// It receives the segment number to retry from the Task reactor, and determines whether the remaining segments can still meet the deadline.
+// If not, it halts execution early, otherwise, it triggers a retry through the Task reactor.
 reactor Coordinator {
   input instance_start_time_update: time
   input failed_seg: int
@@ -179,6 +181,9 @@ reactor Coordinator {
   =}
 
   reaction(failed_seg) -> out {=
+    lf_set_deadline(self, MSEC(self->task_info.dead_line) - (lf_time_logical_elapsed() - self->instance_start_time));
+    lf_check_deadline(self, true);
+
     if(failed_seg->value == 0) {
       // 0 means, all segments are finished.
       // Still need to signal output with 0.
@@ -198,11 +203,19 @@ reactor Coordinator {
       if(min_instance_finish_time > self->instance_start_time + (self->task_info.dead_line * MSEC(1))) {
         lf_print_log("TASK%d: Current Logical time: %lld msecs, microstep: %d, Physical time: %lld msecs.", self->task_info.task_num, lf_time_logical_elapsed() / MSEC(1), lf_tag().microstep, lf_time_physical_elapsed() / MSEC(1));
         lf_print_log("TASK%d: ****Logical time deadline violation predicted.\nDeadline is: %lld msecs, while minimum predicted instance finish time is %lld msecs.\nDropping left over tasks, and giving up instance.\n", self->task_info.task_num, (self->task_info.dead_line * MSEC(1) + self->instance_start_time)/ MSEC(1), min_instance_finish_time / MSEC(1));
+      } else if(self->task_info.dead_line * MSEC(1) < lf_time_logical_elapsed() - self->instance_start_time) {
+        // Checks if there are any logical time deadline misses.
+        // Should never pass here.
+        lf_print_log("\nLogical time deadline violation detected on Logical time: %lld msecs, microstep: %d, Physical time: %lld msecs.\nDeadline was: %lld msecs.\n", lf_time_logical_elapsed() / MSEC(1), lf_tag().microstep, lf_time_physical_elapsed() / MSEC(1), (self->task_info.dead_line * MSEC(1) + self->instance_start_time)/ MSEC(1));
       } else {
         // Did not violate predicted deadline.
         lf_set(out, failed_seg->value);
       }
     }
+  =} deadline(3 sec) {=
+    // Checks if there are any Physical time - Logical start time of task deadline misses.
+    // Should never pass here.
+    lf_print("Deadline violation detected on Logical time: %lld msecs, microstep: %d, Physical time: %lld msecs.\nDeadline was: %lld msecs.\n", lf_time_logical_elapsed() / MSEC(1), lf_tag().microstep, lf_time_physical_elapsed() / MSEC(1), (self->task_info.dead_line * MSEC(1) + self->instance_start_time)/ MSEC(1));
   =}
 }
 

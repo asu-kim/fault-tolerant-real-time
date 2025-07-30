@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.gridspec as gridspec
 from matplotlib.backends.backend_pdf import PdfPages
 
-input_csv = '../res10000/res10000.csv'
-output_pdf = '../res10000/graph.pdf'
+input_csv = '.result_dir10000/result_dir10000.csv'
+output_pdf = '../result_dir10000/graph.pdf'
 
 # Load and clean CSV
 df = pd.read_csv(input_csv)
@@ -209,3 +209,4 @@ with PdfPages(output_pdf) as pdf:
     fig.text(0.08, 0.18, 'Failure Rate', ha='center', va='top', fontsize=20)
     pdf.savefig(fig, bbox_inches='tight')
     plt.close()
+    

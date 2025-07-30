@@ -1,9 +1,15 @@
-/** @author Dongha Kim */
+/**
+ * This file defines tasks used for experiment.
+ *
+ * Task 1 is the approach with advancing logical time depending on success and failure. Task 2 does
+ * not advance logical time in any case. Task 3 always advances logical time as much as wcet_f.
+ * @author Dongha Kim
+ */
 target C {
   files: ["lib/fault_tolerance_common.h"]
 }
 
-import TaskRetryTemplate, TaskBody, TaskRetryWorstCaseTemplate from "lib/TaskRetryTemplate.lf"
+import FaultTolerantTaskTemplate, TaskBody, TaskRetryWorstCaseTemplate from "lib/FaultTolerantTaskTemplate.lf"
 import TaskRetryNoAdvance from "lib/TaskRetryNoAdvanceTemplate.lf"
 
 reactor TaskScheduler(period: time = 0 msec) {
@@ -55,15 +61,14 @@ reactor Task1Body(failure_rate: double = 0.01) extends TaskBody {
   reaction(start_seg) -> f_seg {=
     int result = total_task1(start_seg->value, self->failure_rate);
     lf_set(f_seg, result);
-    lf_print("self->failure_rate: %lf",self->failure_rate);
   =}
 }
 
-reactor Task1(failure_rate: double = 0.01) extends TaskRetryTemplate {
+reactor Task1(failure_rate: double = 0.01) extends FaultTolerantTaskTemplate {
   task1body = new Task1Body(failure_rate=failure_rate)
 
   trigger.start_seg -> task1body.start_seg
-  trigger.start_seg -> advance.seg_start_num
+  trigger.start_seg -> advance.start_seg
   task1body.f_seg -> advance.f_seg
   advance.failed_seg -> failed_seg
 }
@@ -79,7 +84,7 @@ reactor Task3(failure_rate: double = 0.01) extends TaskRetryWorstCaseTemplate {
   task1body = new Task1Body(failure_rate=failure_rate)
 
   trigger.start_seg -> task1body.start_seg
-  trigger.start_seg -> advance.seg_start_num
+  trigger.start_seg -> advance.start_seg
   task1body.f_seg -> advance.f_seg
   advance.failed_seg -> failed_seg
 }

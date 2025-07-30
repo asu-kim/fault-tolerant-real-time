@@ -1,18 +1,16 @@
 /**
  * This defines two task reactors, **Task1** and **Task2**, each composed of:
- * - A segmented body reactor (`Task1Body`, `Task2Body`) with 3 retryable segments and a 70% failure
+ * - A segmented body reactor (`Task1Body`, `Task2Body`) with 3 retryable segments and some failure
  * rate, where each segment performs simple computation with artificial delay (sleep).
  * - An output handler (`Task1OutHandler`, `Task2OutHandler`) that emits results only upon full task
  * completion.
- * - The top-level task reactors (`Task1`, `Task2`) extends `TaskRetryTemplate`.
+ * - The top-level task reactors (`Task1`, `Task2`) extends `FaultTolerantTaskTemplate`.
  *
  * @author Dongha Kim, Hokeun Kim
  */
-target C {
-  build-type: debug
-}
+target C
 
-import TaskRetryTemplate, TaskBody from "lib/TaskRetryTemplate.lf"
+import FaultTolerantTaskTemplate, TaskBody from "lib/FaultTolerantTaskTemplate.lf"
 
 reactor Task1Body<IN_T, OUT_T, CHECK_T> extends TaskBody {
   preamble {=
@@ -90,7 +88,7 @@ reactor Task1OutHandler<OUT_T> {
   =}
 }
 
-reactor Task1<IN_T, OUT_T, CHECK_T> extends TaskRetryTemplate {
+reactor Task1<IN_T, OUT_T, CHECK_T> extends FaultTolerantTaskTemplate {
   input task_input: IN_T
   output task_output: OUT_T
 
@@ -182,7 +180,7 @@ reactor Task2OutHandler<OUT_T> {
   =}
 }
 
-reactor Task2<IN_T, OUT_T, CHECK_T> extends TaskRetryTemplate {
+reactor Task2<IN_T, OUT_T, CHECK_T> extends FaultTolerantTaskTemplate {
   input task_input: IN_T
   output task_output: OUT_T
 
