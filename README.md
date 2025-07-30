@@ -5,9 +5,9 @@
 This repository introduces a deterministic execution model of fault-tolerant real-time software in Lingua Franca.
 
 ## Motivation
-For fault tolerance, time redundancy techniques such as re-execution is widely used. However, this approach introduces non-determinism due to unpredictable timing of failures, which leads to inconsistent behavior and makes analysis and repeatable testing unreliable.
+For fault tolerance without requiring additional hardware, time redundancy techniques such as re-execution is widely used. However, this approach introduces non-determinism due to unpredictable timing of failures, which leads to inconsistent behavior and makes analysis and repeatable testing unreliable.
 
-This PR introduces a deterministic execution model for fault-tolerant real-time software within LF. The key idea is to re-execute failed tasks, while advancing logical execution time (LET) deterministically, regardless of actual failure timing. This ensures that the same sequence of task failures always results in the same outcome.
+This repository introduces a deterministic execution model for fault-tolerant real-time software within LF. The key idea is to re-execute failed tasks, while advancing logical execution time (LET) deterministically, regardless of actual failure timing. This ensures that the same sequence of task failures always results in the same outcome.
 
 We achieve this by advancing logical time using worst-case execution times (WCETs). Furthermore, we propose an enhanced LET advancement mechanism that distinguishes between successful and failed segments.
 
@@ -29,7 +29,7 @@ We achieve this by advancing logical time using worst-case execution times (WCET
 - This example runs a single task, performing checkpointed retries, LET advancement, and proactive abortion.
 - The `TaskScheduler` periodically sends a signal to start a task, the `Task` executes, and if the Task fails, the `Coordinator` determines whether to re-execute the task, depending on the deadline, and signals to re-execute from which segment to start.
 
-<img width="855" alt="image" src="img/OneTask.png" />
+<img width="855" alt="image" src="fault-tolerance/img/OneTask.png" />
 
 ---
 
@@ -37,7 +37,7 @@ We achieve this by advancing logical time using worst-case execution times (WCET
 - Adds a second `Task` instance that runs **concurrently** with the first.
 - Both tasks perform checkpointed retries, LET advancement, and proactive abortion independently.
 - It has different number of segments, WCET, optWCET.
-<img width="742" alt="image" src="img/ParallelTask.png" />
+<img width="742" alt="image" src="fault-tolerance/img/ParallelTask.png" />
 
 
 
@@ -45,7 +45,7 @@ We achieve this by advancing logical time using worst-case execution times (WCET
 ### `SequentialTask.lf` -  Sequential Execution of Tasks
 - Adds a second `Task` that runs **after** the first task finishes.
 - The first task's output is passed to the second task's output. 
-<img width="1127" alt="image" src="img/SequentialTask.png" />
+<img width="1127" alt="image" src="fault-tolerance/img/SequentialTask.png" />
 
 ---
 
@@ -60,7 +60,7 @@ To show that our template can be easily used by using the exact C code as a task
 # Implementation Details
 
 ## Key Reactors.
-<img width="1127" alt="image" src="img/TaskExample.png" />
+<img width="1127" alt="image" src="fault-tolerance/img/TaskExample.png" />
 
 - `Trigger` :
 This triggers the segment to execute. If the `instantiate` port is triggered, execution starts from the first segment. If the `retry` port is triggered, it resumes from the indicated segment number passed by the port.
